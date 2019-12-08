@@ -1,0 +1,10 @@
+{
+    "apps": [
+        {
+            "name": "fibos-tracker",
+            "interpreter": "fibos",
+            "script": "./tracker.js",
+            "cwd": "./"
+        }
+    ]
+}
