@@ -6,8 +6,8 @@ const config = {
     data_dir: "./data",
     chain_parameter: {
         //"replay": true,
-        "genesis-json": "./genesis.json",
-        "delete-all-blocks": true
+        //"genesis-json": "./genesis.json",
+        //"delete-all-blocks": true
         //"snapshot":"./data/snapshots/snapshot-0450fe4433833847fe30a32e709ea3eb5291bd909fda910a2e5f33a06e86869e.bin"
     },
     tracker: {
