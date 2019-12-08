@@ -2,7 +2,6 @@
     "name": "fibos-tracker-history-api",
     "version": "1.0.0",
     "dependencies": {
-        "@fxjs/sql-query": "^0.6.1",
         "fibos-tracker": "^1.4.0",
         "fibos-accounts": "^1.0.0"
     }

@@ -1,18 +1,18 @@
 const config = {
-    http_port: '8888',
-    p2p_port: '9876',
+    http_port: '18888',
+    p2p_port: '19876',
     p2p_peer_address: require('./config/p2p.json'),
     config_dir: "./config",
     data_dir: "./data",
     chain_parameter: {
-        "replay": true,
-        //"genesis-json": "./genesis.json",
-        //"delete-all-blocks": true
+        //"replay": true,
+        "genesis-json": "./genesis.json",
+        "delete-all-blocks": true
         //"snapshot":"./data/snapshots/snapshot-0450fe4433833847fe30a32e709ea3eb5291bd909fda910a2e5f33a06e86869e.bin"
     },
     tracker: {
         replay: false,
-        replayStatrBn: 808821
+        replayStatrBn: 808821,
     }
 }
 
@@ -48,8 +48,7 @@ const fs = require("fs");
 const Tracker = require("fibos-tracker");
 Tracker.Config.replay = config.tracker.replay;
 Tracker.Config.replayStatrBn = config.tracker.replayStatrBn;
-// default sqlite
-// Tracker.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
+//Tracker.Config.DBconnString = config.tracker.DBconnString;// "mysql://root:123456@127.0.0.1/fibos_chain";
 
 const tracker = new Tracker();
 tracker.use(require("fibos-accounts"));
