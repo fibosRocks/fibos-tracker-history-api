@@ -3,6 +3,7 @@ const bodyparser = require('body-parser');
 const sqlite = require('sqlite');
 
 const serverPort = 8090
+const dbPath = './db/tracker.db'
 
 const swaggerSpec = swaggerJSDoc({
     definition: {
@@ -34,7 +35,7 @@ app.all('*', function (req, res, next) {
 });
 
 // db
-sqlite.open('./fibos_chain.db').then(db => {
+sqlite.open(dbPath).then(db => {
     require('./api/v2.history.js')(app, db, swaggerSpec);
 })
 

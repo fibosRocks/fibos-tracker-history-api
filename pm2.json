@@ -5,6 +5,11 @@
             "interpreter": "fibos",
             "script": "./tracker.js",
             "cwd": "./"
+        },
+        {
+            "name": "fibos-tracker-api",
+            "script": "./api.js",
+            "cwd": "./"
         }
     ]
 }
