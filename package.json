@@ -2,7 +2,12 @@
     "name": "fibos-tracker-history-api",
     "version": "1.0.0",
     "dependencies": {
+        "body-parser": "^1.19.0",
+        "express": "^4.17.1",
+        "fibos-accounts": "^1.0.0",
         "fibos-tracker": "^1.4.0",
-        "fibos-accounts": "^1.0.0"
+        "sql-template-strings": "^2.2.2",
+        "sqlite": "^3.0.3",
+        "swagger-jsdoc": "^3.5.0"
     }
 }
