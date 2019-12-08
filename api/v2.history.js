@@ -144,7 +144,7 @@ module.exports = (app, db, swaggerSpec) => {
         // }, (err, result) => {
         //     if (err) {
         //         console.error(err);
-        //         return res.status(500).end();
+        //         return res.status(500).send({ error: er r });
         //     }
         //     let actions = [];
         //     result.actions.forEach(element => {
@@ -180,7 +180,7 @@ module.exports = (app, db, swaggerSpec) => {
             res.json(tx);
         }).catch(err => {
             console.error(err);
-            res.status(500).end();
+            res.status(500).send({ error: err.message });
         })
     }
 
@@ -193,7 +193,7 @@ module.exports = (app, db, swaggerSpec) => {
             res.json(tx);
         }).catch(err => {
             console.error(err);
-            res.status(500).end();
+            res.status(500).send({ error: err.message });
         })
     }
 
@@ -201,6 +201,9 @@ module.exports = (app, db, swaggerSpec) => {
         const txPromise = db.get(SQL`SELECT rawData FROM fibos_transactions WHERE trx_id = ${id}`);
         const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
         return Promise.all([libPromise, txPromise]).then(([lib, tx]) => {
+            if (!tx) {
+                throw new Error('transaction not found!')
+            }
             const transaction = JSON.parse(tx.rawData)
             transaction.last_irreversible_block = lib.block_num
             return transaction
@@ -216,7 +219,7 @@ module.exports = (app, db, swaggerSpec) => {
             res.json(accounts);
         }).catch(err => {
             console.error(err);
-            res.status(500).end();
+            res.status(500).send({ error: err.message });
         })
 
     }
