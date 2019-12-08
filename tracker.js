@@ -6,13 +6,14 @@ const config = {
     data_dir: "./data",
     chain_parameter: {
         //"replay": true,
-        //"genesis-json": "./genesis.json",
-        //"delete-all-blocks": true
+        // "genesis-json": "./genesis.json",
+        // "delete-all-blocks": true
         //"snapshot":"./data/snapshots/snapshot-0450fe4433833847fe30a32e709ea3eb5291bd909fda910a2e5f33a06e86869e.bin"
     },
     tracker: {
         replay: false,
-        replayStatrBn: 808821,
+        replayStatrBn: 1000000,
+        DBconnString: "sqlite:./db/tracker.db"
     }
 }
 
@@ -48,10 +49,13 @@ const fs = require("fs");
 const Tracker = require("fibos-tracker");
 Tracker.Config.replay = config.tracker.replay;
 Tracker.Config.replayStatrBn = config.tracker.replayStatrBn;
-//Tracker.Config.DBconnString = config.tracker.DBconnString;// "mysql://root:123456@127.0.0.1/fibos_chain";
+if (config.tracker.DBconnString) {
+    Tracker.Config.DBconnString = config.tracker.DBconnString;
+}
 
 const tracker = new Tracker();
 tracker.use(require("fibos-accounts"));
+tracker.use(require("fibos-tokens"));
 tracker.emitter();
 
 fibos.start();

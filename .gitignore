@@ -2,3 +2,4 @@ node_modules
 fibos_chain*
 config/config.ini
 data
+db
