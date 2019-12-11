@@ -1,6 +1,7 @@
 'use strict';
 
 const SQL = require('sql-template-strings');
+const fibos_graphql = require('../lib/fibos_graphql')
 
 module.exports = (app, db, swaggerSpec) => {
 
@@ -35,6 +36,29 @@ module.exports = (app, db, swaggerSpec) => {
  	 *                 default: all
 	 */
     app.post('/v1/history/get_actions', getActionsPOST);
+
+    /**
+	 * @swagger
+	 *
+	 * /v1/history/get_symbol_actions:
+	 *   post:
+	 *     description: get_symbol_actions
+	 *     requestBody:
+ 	 *       content:
+ 	 *         application/json:
+ 	 *           schema:
+ 	 *             type: object
+ 	 *             properties:
+ 	 *               limit:
+ 	 *                 type: number
+ 	 *                 default: 50
+ 	 *               skip:
+ 	 *                 type: number
+ 	 *                 default: 0
+ 	 *               account:
+ 	 *                 type: string
+	 */
+    app.post('/v1/history/get_symbol_actions', getSymbolActionsPOST);
 
 	/**
 	 * @swagger
@@ -80,6 +104,29 @@ module.exports = (app, db, swaggerSpec) => {
  	 *                 type: string
 	 */
     app.post('/v1/history/get_key_accounts', getKeyAccountsPOST);
+
+    function getSymbolActionsPOST(req, res) {
+        let { account, limit, skip } = req.body
+
+        if (!account) {
+            return res.status(401).send("Wrong account!");
+        }
+
+        if (!limit) {
+            limit = 50
+        }
+
+        if (!skip) {
+            skip = 0
+        }
+
+        fibos_graphql.getSymbolTxs(account, limit, skip).then(txs => {
+            res.json(txs);
+        }).catch(err => {
+            console.error(err);
+            res.status(500).send({ error: err.message });
+        })
+    }
 
     function getActionsPOST(req, res) {
         // // default values
