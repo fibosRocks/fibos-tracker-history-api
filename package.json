@@ -9,7 +9,7 @@
         "express": "^4.17.1",
         "fibos-accounts": "^1.0.0",
         "fibos-tokens": "^1.0.0",
-        "fibos-tracker": "^1.4.0",
+        "fibos-tracker": "git+https://github.com/fibosRocks/fibos-tracker.git",
         "sql-template-strings": "^2.2.2",
         "sqlite": "^3.0.3",
         "swagger-jsdoc": "^3.5.0"
