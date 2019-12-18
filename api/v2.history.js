@@ -124,93 +124,67 @@ module.exports = (app, db) => {
     }
 
     function getActionsPOST(req, res) {
-        // // default values
-        // let skip = 0;
-        // let limit = 10;
-        // let sort = -1;
-        // let accountName = String(req.body.account_name);
-        // let action = String(req.body.action_name);
 
-        // let query = {
-        //     $or: [
-        // 		/* {"act.account": accountName}, 
-        // 		{"act.data.receiver": accountName}, 
-        // 		{"act.data.from": accountName}, 
-        // 		{"act.data.to": accountName},
-        // 		{"act.data.name": accountName},
-        // 		{"act.data.voter": accountName},
-        // 		{"act.authorization.actor": accountName} */
-        //         { "receipt.receiver": accountName }
-        //     ]
-        // };
-        // if (action !== "undefined") {
-        //     query["act.name"] = action;
-        // }
+        let skip = 0;
+        let limit = 30;
+        let sort = -1;
+        let orderBy = 'DESC'
 
-        // let pos = Number(req.body.pos);
-        // let offset = Number(req.body.offset);
-        // if (!isNaN(pos) && !isNaN(offset)) {
-        //     if (pos < 0) {
-        //         sort = -1;
-        //         skip = 0;
-        //         limit = offset < 0 ? -1 * offset + 1 : 0;
-        //     } else {
-        //         sort = 1;
-        //         skip = pos + (offset < 0 ? offset : 0);
-        //         skip = skip < 0 ? 0 : skip;
-        //         limit = Math.abs((offset + pos) < 0 ? pos : offset) + 1;
-        //     }
-        // }
+        let { pos, offset, account_name } = req.body
 
-        // if (limit > MAX_ELEMENTS) {
-        //     return res.status(401).send(`Max elements ${MAX_ELEMENTS}!`);
-        // }
-        // if (skip < 0 || limit < 0) {
-        //     return res.status(401).send(`Skip (${skip}) || (${limit}) limit < 0`);
-        // }
-        // if (sort !== -1 && sort !== 1) {
-        //     return res.status(401).send(`Sort param must be 1 or -1`);
-        // }
+        if (isNaN(pos)) {
+            pos = -1, offset = -30
+        } else if (isNaN(offset)) {
+            offset = pos < 0 ? -30 : 30
+        }
 
-        // async.parallel({
-        //     lib: (callback) => {
-        //         DB.collection("blocks").find({ "irreversible": true }).sort({ "block_num": -1 }).limit(1).toArray(callback);
-        //     },
-        //     actions: (callback) => {
-        //         if (limit == 0) {
-        //             callback(null, []);
-        //         } else {
-        //             DB.collection("action_traces").find(query).sort({ "receipt.recv_sequence": sort }).skip(skip).limit(limit).toArray(callback);
-        //         }
-        //     }
-        // }, (err, result) => {
-        //     if (err) {
-        //         console.error(err);
-        //         return res.status(500).send({ error: er r });
-        //     }
-        //     let actions = [];
-        //     result.actions.forEach(element => {
-        //         delete element._id;
-        //         delete element.createdAt;
-        //         actions.push({
-        //             "global_action_seq": element.receipt.global_sequence,
-        //             "account_action_seq": element.receipt.recv_sequence - 1,
-        //             "block_num": element.block_num,
-        //             "block_time": element.block_time,
-        //             "action_trace": element
-        //         })
-        //     });
+        if (pos < 0) {
+            sort = -1;
+            skip = 0;
+            limit = offset < 0 ? -1 * offset + 1 : 0;
+        } else {
+            sort = 1;
+            orderBy = 'ASC'
+            skip = pos + (offset < 0 ? offset : 0);
+            skip = skip < 0 ? 0 : skip;
+            limit = Math.abs((offset + pos) < 0 ? pos : offset) + 1;
+        }
 
-        //     if (sort == -1) {	//like history format
-        //         actions.sort((a, b) => {
-        //             return a.account_action_seq - b.account_action_seq;
-        //         })
-        //     }
-        //     result.actions = actions;
-        //     result.last_irreversible_block = result.lib[0].block_num;
-        //     delete result.lib;
-        //     res.json(result)
-        // });
+        if (limit > 200) {
+            limit = 200
+        }
+
+        const actionSql = `SELECT a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.global_sequence = a.global_sequence  ORDER BY a.id ${orderBy} LIMIT ${limit} OFFSET ${skip};`
+        const actionsPromise = db.all(actionSql);
+
+        const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
+        return Promise.all([libPromise, actionsPromise]).then(([lib, actions]) => {
+            if (!actions) {
+                actions = []
+            }
+            let formatActions = [];
+            actions.forEach(element => {
+                const action = JSON.parse(element.rawData)
+                formatActions.push({
+                    "global_action_seq": Number(action.receipt.global_sequence),
+                    "account_action_seq": Number(action.receipt.recv_sequence) - 1,
+                    "block_num": Number(action.block_num),
+                    "block_time": action.block_time,
+                    "action_trace": action
+                })
+            });
+
+            if (sort == -1) {	//like history format
+                formatActions.sort((a, b) => {
+                    return a.account_action_seq - b.account_action_seq;
+                })
+            }
+
+            const result = {}
+            result.actions = formatActions;
+            result.last_irreversible_block = lib.block_num;
+            res.json(result)
+        })
     }
 
     function getTransactionPOST(req, res) {
