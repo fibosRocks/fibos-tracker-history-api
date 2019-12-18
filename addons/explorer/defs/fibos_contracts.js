@@ -8,7 +8,8 @@ module.exports = db => {
             type: "text",
             big: true
         },
-        block_num: { type: 'integer' }
+        block_num: { type: 'integer', required: true },
+        trx_id: { type: "text", required: true }
     }, {
         hooks: {},
         methods: {},

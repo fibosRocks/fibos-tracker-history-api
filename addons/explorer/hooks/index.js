@@ -10,13 +10,14 @@ module.exports = {
             let FibosContracts = db.models.fibos_contracts;
 
             if (FibosContracts.oneSync({ id: global_sequence })) return;
-            
+
             FibosContracts.createSync({
                 id: global_sequence,
                 account,
                 type: "setabi",
                 data: abi,
-                block_num: msg.block_num
+                block_num: msg.block_num,
+                trx_id: msg.trx_id
             })
         })
     },
@@ -31,13 +32,14 @@ module.exports = {
             let FibosContracts = db.models.fibos_contracts;
 
             if (FibosContracts.oneSync({ id: global_sequence })) return;
-            
+
             FibosContracts.createSync({
                 id: global_sequence,
                 account,
                 type: "setcode",
                 data: code,
-                block_num: msg.block_num
+                block_num: msg.block_num,
+                trx_id: msg.trx_id
             })
         })
     },
