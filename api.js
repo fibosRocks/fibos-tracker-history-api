@@ -12,7 +12,7 @@ const swaggerSpec = swaggerJSDoc({
             version: '1.0.0',
         },
     },
-    apis: ['./api/v2.history.js'],
+    apis: ['./api/v2.history.js', './api/explorer.js'],
 });
 
 const express = require('express');
@@ -34,10 +34,20 @@ app.all('*', function (req, res, next) {
     }
 });
 
+app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+});
+
 // db
 sqlite.open(dbPath).then(db => {
-    require('./api/v2.history.js')(app, db, swaggerSpec);
+    require('./api/v2.history.js')(app, db);
 })
+
+// explorer
+require('./explorer')
+const memory = require('./explorer/memory')
+require('./api/explorer.js')(app, memory);
 
 process.on('uncaughtException', (err) => {
     console.error(`======= UncaughtException API Server :  ${err}`);

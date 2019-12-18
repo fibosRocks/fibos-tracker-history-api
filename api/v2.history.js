@@ -3,12 +3,7 @@
 const SQL = require('sql-template-strings');
 const fibos_graphql = require('../lib/fibos_graphql')
 
-module.exports = (app, db, swaggerSpec) => {
-
-    app.get('/api-docs.json', (req, res) => {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(swaggerSpec);
-    });
+module.exports = (app, db) => {
 
 	/**
 	 * @swagger

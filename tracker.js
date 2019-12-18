@@ -1,22 +1,20 @@
+const p2p_peer_address = require('./config/p2p.json')
+const defaultConfig = require('./config/tracker.json')
 const config = {
-    http_port: '18888',
-    p2p_port: '19876',
-    p2p_peer_address: require('./config/p2p.json'),
-    config_dir: "./config",
-    data_dir: "./data",
-    chain_parameter: {
-        //"replay": true,
-        // "genesis-json": "./genesis.json",
-        // "delete-all-blocks": true
-        //"snapshot":"./data/snapshots/snapshot-0450fe4433833847fe30a32e709ea3eb5291bd909fda910a2e5f33a06e86869e.bin"
-    },
-    tracker: {
-        replay: false,
-        replayStatrBn: 1000000,
-        DBconnString: "sqlite:./db/tracker.db"
+    ...defaultConfig, ...{
+        chain_parameter: {
+            // "hard-replay": true,
+            // "genesis-json": "./genesis.json",
+            // "delete-all-blocks": true
+            //"snapshot":"./data/snapshots/snapshot-0450fe4433833847fe30a32e709ea3eb5291bd909fda910a2e5f33a06e86869e.bin"
+        },
+        tracker: {
+            replay: false,
+            replayStatrBn: 0,
+            "DBconnString": "sqlite:./db/tracker.db"
+        }
     }
 }
-
 // fibos node
 const fibos = require('fibos');
 fibos.config_dir = config.config_dir;
@@ -31,7 +29,7 @@ fibos.load("http", {
 
 fibos.load("net", {
     "p2p-listen-endpoint": `0.0.0.0:${config.p2p_port}`,
-    "p2p-peer-address": config.p2p_peer_address
+    "p2p-peer-address": p2p_peer_address
 });
 fibos.load("producer_api");
 
@@ -55,7 +53,8 @@ if (config.tracker.DBconnString) {
 
 const tracker = new Tracker();
 tracker.use(require("fibos-accounts"));
-tracker.use(require("fibos-tokens"));
+tracker.use(require("./addons/explorer"));
+// tracker.use(require("fibos-tokens"));
 tracker.emitter();
 
 fibos.start();
