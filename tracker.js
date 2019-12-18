@@ -11,7 +11,7 @@ const config = {
         tracker: {
             replay: false,
             replayStatrBn: 0,
-            "DBconnString": "sqlite:./db/tracker.db"
+            sqlitePath: "./db/tracker.db"
         }
     }
 }
@@ -40,15 +40,18 @@ fibos.enableJSContract = true;
 fibos.load("ethash");
 
 // tracker
-const fs = require("fs");
-["", "\-shm", "\-wal"].forEach(function (k) {
-    if (fs.exists("./fibos_chain.db" + k)) fs.unlink("./fibos_chain.db" + k);
-});
+
+// init
+// const fs = require("fs");
+// ["", "\-shm", "\-wal"].forEach(function (k) {
+//     if (fs.exists(config.tracker.sqlitePath + k)) fs.unlink(config.tracker.sqlitePath + k);
+// });
+
 const Tracker = require("fibos-tracker");
 Tracker.Config.replay = config.tracker.replay;
 Tracker.Config.replayStatrBn = config.tracker.replayStatrBn;
-if (config.tracker.DBconnString) {
-    Tracker.Config.DBconnString = config.tracker.DBconnString;
+if (config.tracker.sqlitePath) {
+    Tracker.Config.DBconnString = "sqlite:" + config.tracker.sqlitePath;
 }
 
 const tracker = new Tracker();
