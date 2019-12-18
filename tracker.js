@@ -9,7 +9,7 @@ const config = {
             //"snapshot":"./data/snapshots/snapshot-0450fe4433833847fe30a32e709ea3eb5291bd909fda910a2e5f33a06e86869e.bin"
         },
         tracker: {
-            replay: false,
+            replay: true,
             replayStatrBn: 0,
             "DBconnString": "sqlite:./db/tracker.db"
         }

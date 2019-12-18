@@ -9,8 +9,10 @@ module.exports = {
 
             let FibosContracts = db.models.fibos_contracts;
 
+            if (FibosContracts.oneSync({ id: global_sequence })) return;
+            
             FibosContracts.createSync({
-                global_sequence,
+                id: global_sequence,
                 account,
                 type: "setabi",
                 data: abi,
@@ -28,8 +30,10 @@ module.exports = {
 
             let FibosContracts = db.models.fibos_contracts;
 
+            if (FibosContracts.oneSync({ id: global_sequence })) return;
+            
             FibosContracts.createSync({
-                global_sequence,
+                id: global_sequence,
                 account,
                 type: "setcode",
                 data: code,

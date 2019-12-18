@@ -1,7 +1,6 @@
 module.exports = db => {
     let FibosContracts = db.define('fibos_contracts', {
-        id: { type: 'serial', key: true },
-        global_sequence: { type: 'integer' },
+        id: { type: 'integer', unique: true, required: true, key: true },//global_sequence
         account: { type: "text", size: 12, required: true },
         type: String,
         data: {
