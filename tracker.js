@@ -57,7 +57,6 @@ if (config.tracker.sqlitePath) {
 const tracker = new Tracker();
 tracker.use(require("fibos-accounts"));
 tracker.use(require("./addons/explorer"));
-// tracker.use(require("fibos-tokens"));
 tracker.emitter();
 
 fibos.start();
