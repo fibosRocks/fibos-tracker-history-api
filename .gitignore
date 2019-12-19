@@ -4,3 +4,4 @@ config/config.ini
 data
 db
 test
+log

@@ -1,9 +1,10 @@
 const swaggerJSDoc = require('swagger-jsdoc');
 const bodyparser = require('body-parser');
 const sqlite = require('sqlite');
+const path = require('path')
 
 const serverPort = 8090
-const dbPath = './db/tracker.db'
+const dbPath = path.resolve('db/tracker.db')
 
 const swaggerSpec = swaggerJSDoc({
     definition: {

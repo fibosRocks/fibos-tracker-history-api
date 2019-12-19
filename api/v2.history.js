@@ -154,7 +154,7 @@ module.exports = (app, db) => {
             limit = 200
         }
 
-        const actionSql = `SELECT a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.global_sequence = a.global_sequence  ORDER BY a.id ${orderBy} LIMIT ${limit} OFFSET ${skip};`
+        const actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY a.id ${orderBy} LIMIT ${limit} OFFSET ${skip};`
         const actionsPromise = db.all(actionSql);
 
         const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
@@ -164,7 +164,9 @@ module.exports = (app, db) => {
             }
             let formatActions = [];
             actions.forEach(element => {
+                const receipt = JSON.parse(element.receipt)
                 const action = JSON.parse(element.rawData)
+                action.receipt = receipt
                 formatActions.push({
                     "global_action_seq": Number(action.receipt.global_sequence),
                     "account_action_seq": Number(action.receipt.recv_sequence) - 1,
