@@ -3,6 +3,8 @@ const SQL = require('sql-template-strings');
 const sqlite = require('sqlite');
 const path = require('path')
 const dbPath = path.resolve('db/tracker.db');
+const axios = require('axios');
+const trackerEndPoint = require('../config/tracker.json').http_port;
 
 //cache dashboard
 function cacheDashboard() {
@@ -10,9 +12,13 @@ function cacheDashboard() {
         .then(db => {
             //get summaries
             let promises = [
-                db.get(SQL`SELECT count(*) as block_count FROM fibos_blocks`).then(res => {
-                    return res.block_count
+                axios.get(trackerEndPoint + "/v1/chain/get_info").then(res => {
+                    const { data } = res;
+                    return data.head_block_num;
                 }),
+                // db.get(SQL`SELECT count(*) as block_count FROM fibos_blocks`).then(res => {
+                //     return res.block_count
+                // }),
                 db.get(SQL`SELECT count(*) as tx_count FROM fibos_transactions`).then(res => {
                     return res.tx_count
                 }),

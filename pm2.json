@@ -2,8 +2,7 @@
     "apps": [
         {
             "name": "fibos-tracker-api",
-            "script": "./api.js",
-            "cwd": "./"
+            "script": "api.js"
         }
     ]
 }
