@@ -65,11 +65,24 @@ function cacheDashboard() {
                 db.all(SQL`SELECT * FROM fibos_transactions order by id desc limit 20`).then(transactions => {
                     let liteTrxs = [];
                     transactions.forEach(transaction => {
-                        let trx = {};
+                        const trx = {};
+                        const data = JSON.parse(transaction.rawData)
+                        const accounts = new Set()
+                        const contract_actions = []
+                        for (const action of data.action_traces) {
+                            const authorizations = action.act.authorization
+                            for (const authorization of authorizations) {
+                                accounts.add(authorization.actor)
+                            }
+                            contract_actions.push({
+                                contract: action.act.account,
+                                action: action.act.name
+                            })
+                        }
+
                         trx.id = transaction.trx_id;
-                        //trx.timestamp = transaction.timestamp;
-                        // trx.accounts = transaction.accounts;
-                        trx.contract_actions = transaction.contract_action;
+                        trx.accounts = Array.from(accounts)
+                        trx.contract_actions = contract_actions;
                         liteTrxs.push(trx);
                     });
                     resolve(liteTrxs);
