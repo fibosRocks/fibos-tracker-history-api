@@ -4,7 +4,7 @@ const sqlite = require('sqlite');
 const path = require('path')
 const dbPath = path.resolve('db/tracker.db');
 const axios = require('axios');
-const trackerEndPoint = require('../config/tracker.json').http_port;
+const trackerHttpPort = require('../config/tracker.json').http_port;
 
 //cache dashboard
 function cacheDashboard() {
@@ -12,9 +12,11 @@ function cacheDashboard() {
         .then(db => {
             //get summaries
             let promises = [
-                axios.get(trackerEndPoint + "/v1/chain/get_info").then(res => {
+                axios.get(`http://127.0.0.1:${trackerHttpPort}/v1/chain/get_info`).then(res => {
                     const { data } = res;
                     return data.head_block_num;
+                }).catch(err => {
+                    console.error(err)
                 }),
                 // db.get(SQL`SELECT count(*) as block_count FROM fibos_blocks`).then(res => {
                 //     return res.block_count
