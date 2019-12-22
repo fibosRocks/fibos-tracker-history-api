@@ -1,4 +1,4 @@
-module.exports = (memory, db) => {
+module.exports = async (memory, db) => {
     require('./voters')(memory, db)
     require('./resource')(memory, db)
     require('./cache')(memory, db)

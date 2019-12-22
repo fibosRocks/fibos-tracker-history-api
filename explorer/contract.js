@@ -40,6 +40,7 @@ module.exports = (memory, db) => {
                     is_token: (actions.indexOf("transfer") != -1)/* ,
                                     is_open: openContracts.includes(contract) */
                 }
+                console.log('contract', obj)
                 memory.hset("contracts", obj.contract, obj);
 
             }
