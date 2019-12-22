@@ -18,7 +18,7 @@ module.exports = (app, memory) => {
     });
 
     app.get('/explorer/vote', (req, res) => {
-        const producer = req.params.producer
+        const producer = req.query.producer
         const total_vote = memory.hget('total_vote', producer)
         res.send(total_vote)
     });
@@ -41,16 +41,47 @@ module.exports = (app, memory) => {
         }
     });
 
+    app.get('/proxy', (req, res) => {
+        res.header("Access-Control-Allow-Origin", "*");
+
+        let size = 30;
+        let start = 0;
+
+        if (req.query.page) {
+            start = 1 * req.query.page * 30;
+        }
+
+        if (req.query.proxy) {
+            let proxy_arr = [];
+            const obj = memory.hget("proxy", req.query.proxy)
+
+            if (err || obj == null) {
+                res.json();
+            }
+
+            proxy_arr = JSON.parse(obj).proxied;
+            if (proxy_arr) {
+                let result = proxy_arr.slice(start, start + size);
+                res.json(result);
+            } else {
+                return res.json();
+            }
+
+        } else {
+            res.json();
+        }
+    });
+
     app.get('/explorer/voter', (req, res) => {
         let size = 30;
         let start = 0;
 
-        if (req.params.page) {
-            start = 1 * req.params.page * 30;
+        if (req.query.page) {
+            start = 1 * req.query.page * 30;
         }
 
-        if (req.params.producer) {
-            const voters = memory.hget("voters", req.params.producer)
+        if (req.query.producer) {
+            const voters = memory.hget("voters", req.query.producer)
             if (!voters) {
                 res.json();
             } else {
