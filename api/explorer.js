@@ -15,7 +15,7 @@ module.exports = (app, memory) => {
     app.get('/explorer/producers', (req, res) => {
         const producers = memory.get('producers')
         const objs = memory.hgetall("total_vote")
-        if (err || objs == null) {
+        if (!objs) {
             res.json();
         }
         producers.forEach((producer) => {
@@ -62,7 +62,7 @@ module.exports = (app, memory) => {
             let proxy_arr = [];
             const obj = memory.hget("proxy", req.query.proxy)
 
-            if (err || obj == null) {
+            if (!obj) {
                 res.json();
             }
 
