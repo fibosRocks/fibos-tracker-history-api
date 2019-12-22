@@ -27,7 +27,7 @@ module.exports = (app, memory) => {
     app.get('/explorer/vote', (req, res) => {
         const producer = req.query.producer
         const total_vote = memory.hget('total_vote', producer)
-        res.send(total_vote)
+        res.json(total_vote)
     });
 
     app.get('/explorer/proxies', (req, res) => {
@@ -48,7 +48,7 @@ module.exports = (app, memory) => {
         }
     });
 
-    app.get('/proxy', (req, res) => {
+    app.get('/explorer/proxy', (req, res) => {
         res.header("Access-Control-Allow-Origin", "*");
 
         let size = 30;
