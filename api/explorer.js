@@ -66,7 +66,7 @@ module.exports = (app, memory) => {
                 res.json();
             }
 
-            proxy_arr = JSON.parse(obj).proxied;
+            proxy_arr = obj.proxied;
             if (proxy_arr) {
                 let result = proxy_arr.slice(start, start + size);
                 res.json(result);
