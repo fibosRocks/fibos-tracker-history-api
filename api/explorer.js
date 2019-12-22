@@ -14,6 +14,13 @@ module.exports = (app, memory) => {
 
     app.get('/explorer/producers', (req, res) => {
         const producers = memory.get('producers')
+        const objs = memory.hgetall("total_vote")
+        if (err || objs == null) {
+            res.json();
+        }
+        producers.forEach((producer) => {
+            producer.eos_votes = 1 * objs[producer.owner];
+        });
         res.json(producers)
     });
 

@@ -17,4 +17,7 @@ module.exports = {
     hget: function (type, key) {
         return memory[type][key]
     },
+    hgetall: function (type) {
+        return memory[type]
+    }
 }
