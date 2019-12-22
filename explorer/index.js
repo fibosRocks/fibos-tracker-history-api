@@ -1,4 +1,6 @@
-require('./voters')
-require('./resource')
-require('./cache')
-require('./contract')
+module.exports = (memory, db) => {
+    require('./voters')(memory, db)
+    require('./resource')(memory, db)
+    require('./cache')(memory, db)
+    require('./contract')(memory, db)
+}
