@@ -42,13 +42,15 @@ app.get('/api-docs.json', (req, res) => {
 
 // db
 sqlite.open(dbPath).then(db => {
+    // history
     require('./api/v2.history.js')(app, db);
+    // explorer
+    const memory = require('./explorer/memory')
+    require('./api/explorer.js')(app, memory, db);
 })
 
-// explorer
+// cache explorer data
 require('./explorer')
-const memory = require('./explorer/memory')
-require('./api/explorer.js')(app, memory);
 
 process.on('uncaughtException', (err) => {
     console.error(`======= UncaughtException API Server :  ${err}`);

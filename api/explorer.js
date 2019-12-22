@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = (app, memory) => {
+module.exports = (app, memory, db) => {
 
     app.get('/explorer/stats', (req, res) => {
         const dashboard = memory.get('dashboard')
@@ -31,7 +31,6 @@ module.exports = (app, memory) => {
     });
 
     app.get('/explorer/proxies', (req, res) => {
-        res.header("Access-Control-Allow-Origin", "*");
 
         const proxied_votes = memory.get("proxied_vote")
         if (!proxied_votes) {
@@ -49,7 +48,6 @@ module.exports = (app, memory) => {
     });
 
     app.get('/explorer/proxy', (req, res) => {
-        res.header("Access-Control-Allow-Origin", "*");
 
         let size = 30;
         let start = 0;
@@ -101,6 +99,103 @@ module.exports = (app, memory) => {
     });
 
 
+    /**
+     * get contracts info
+     */
+    app.get('/explorer/contracts', (req, res) => {
+        const objs = memory.hgetall("contracts")
+        if (!objs) {
+            res.json();
+        }
+        let arr = [];
+        for (let obj in objs) {
+            let newObj = objs[obj];
+            arr.push(newObj);
+        }
+        arr.sort((a, b) => {
+            return b.count - a.count;
+        });
+        res.json(arr);
+    });
+
+    /**
+     * get single contract info
+     */
+    app.get('/explorer/contract/:account', (req, res) => {
+        if (!req.params.account) {
+            res.status(400).json({ error: 'contract name is null' })
+        }
+        const obj = memory.hget("contracts", req.params.account)
+        if (!obj) {
+            res.status(400).json({ error: 'contract name not found' })
+        }
+        res.json(obj);
+
+    });
+
+    /**
+     * get action names by contract name
+     */
+    app.get('/explorer/contractActions/:contract', (req, res) => {
+        if (!req.params.contract) {
+            res.status(400).json({ error: 'contract name is null' })
+        }
+        const obj = redis.hget("contracts", req.params.contract)
+        if (!obj) {
+            res.json();
+        }
+        let actions = obj.actions;
+        res.json(actions);
+    });
+
+    app.get('/explorer/contractTraces', (req, res) => {
+        let size = 100;
+        let skip = 0;
+
+        if (req.query.size) {
+            size = 1 * req.query.size;
+        }
+
+        if (req.query.page) {
+            skip = 1 * req.query.page * 30;
+            size = 30;
+        }
+
+        if (req.query.pending === 'true') {
+            // collection_name = "ContractTracesPending";
+            res.json([])
+        }
+
+        if (!req.query.contract) {
+            res.json([])
+        }
+
+        let sql
+        if (req.query.action) {
+            sql = `SELECT * FROM fibos_actions WHERE contract='${req.query.contract}' AND action='${req.query.action}' ORDER BY id DESC LIMIT ${size} OFFSET ${skip};`
+        } else {
+            sql = `SELECT * FROM fibos_actions WHERE contract='${req.query.contract}' ORDER BY id DESC LIMIT ${size} OFFSET ${skip};`
+        }
+
+        db.all(sql).then(actions => {
+            const newActions = []
+            for (const action of actions) {
+                const data = JSON.parse(action.rawData)
+                const accounts = []
+                for (const auth of data.act.authorization) {
+                    accounts.push(auth.actor)
+                }
+                newActions.push({
+                    contract: data.act.account,
+                    action: data.act.name,
+                    accounts,
+                    block_num: data.block_num,
+                    transaction_id: data.trx_id,
+                    data: data.act.data
+                })
+            }
+            res.json(newActions)
+        })
+    });
+
 }
-
-
