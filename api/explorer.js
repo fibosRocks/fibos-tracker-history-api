@@ -26,15 +26,15 @@ module.exports = (app, memory) => {
     app.get('/explorer/proxies', (req, res) => {
         res.header("Access-Control-Allow-Origin", "*");
 
-        const proxied_vote = memory.get("proxied_vote")
-        if (!proxied_vote) {
+        const proxied_votes = memory.get("proxied_vote")
+        if (!proxied_votes) {
             res.json();
         } else {
             let proxies = []
-            for (let i in objs) {
+            for (let i in proxied_votes) {
                 proxies.push({
                     proxy: i,
-                    proxied_vote: Number(objs[i])
+                    proxied_vote: Number(proxied_votes[i])
                 })
             }
             res.json(proxies);
