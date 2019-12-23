@@ -11,9 +11,9 @@ function getEndPoint() {
 
 module.exports = (memory, db) => {
     function cacheContracts() {
-        db.all(SQL`SELECT DISTINCT account FROM fibos_contracts`).then(async contracts => {
+        db.all(SQL`select contract as account, count(id) as num from fibos_actions group by contract`).then(async contracts => {
             for (const contract of contracts) {
-                const { account } = contract
+                const { account, num } = contract
                 const httpEndPoint = getEndPoint();
                 const abiRes = await axios.post(`${httpEndPoint}/v1/chain/get_abi`, {
                     "account_name": account
@@ -25,9 +25,6 @@ module.exports = (memory, db) => {
                 })
                 const hash = hashRes.data.code_hash;
 
-                const countRes = await db.get(SQL`SELECT COUNT(DISTINCT trx_id)  as tx_count FROM fibos_actions WHERE contract=${account}`)
-                const count = countRes.tx_count
-
                 let actions = [];
                 if (abi.abi) {
                     abi.abi.actions.forEach(action => {
@@ -36,12 +33,13 @@ module.exports = (memory, db) => {
                 }
                 let obj = {
                     contract: account,
-                    count, actions, abi, hash,
+                    count: num,
+                    actions, abi, hash,
                     is_token: (actions.indexOf("transfer") != -1)/* ,
                                     is_open: openContracts.includes(contract) */
                 }
                 console.log('contract', obj)
-                memory.hset("contracts", obj.contract, obj);
+                memory.hset("contracts", obj.contract, JSON.stringify(obj));
 
             }
         }).catch(err => {
@@ -50,7 +48,7 @@ module.exports = (memory, db) => {
     }
 
     cacheContracts();
-    setInterval(cacheContracts, 10 * 60 * 1000);
+    setInterval(cacheContracts, 60 * 60 * 1000);
 
 }
 

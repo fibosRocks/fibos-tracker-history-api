@@ -3,48 +3,70 @@
 module.exports = (app, memory, db) => {
 
     app.get('/explorer/stats', (req, res) => {
-        const dashboard = memory.get('dashboard')
-        res.json(dashboard)
+        memory.get("dashboard", function (err, obj) {
+            if (err || obj == null) {
+                res.json();
+            }
+            res.json(JSON.parse(obj));
+        });
     });
 
     app.get('/explorer/resource', (req, res) => {
-        const resource = memory.get('resource')
-        res.json(resource)
+        memory.get("resource", function (err, obj) {
+            if (err || obj == null) {
+                res.json();
+            }
+            obj = JSON.parse(obj);
+            res.json(obj);
+        });
     });
 
     app.get('/explorer/producers', (req, res) => {
-        const producers = memory.get('producers')
-        const objs = memory.hgetall("total_vote")
-        if (!objs) {
-            res.json();
-        }
-        producers.forEach((producer) => {
-            producer.eos_votes = 1 * objs[producer.owner];
+        memory.get("producers", (err, result) => {
+            if (err) {
+                res.error(err);
+            }
+            let producers = JSON.parse(result);
+            memory.hgetall("total_vote", function (err, objs) {
+                if (err || objs == null) {
+                    res.json();
+                }
+                producers.forEach((producer) => {
+                    producer.eos_votes = 1 * objs[producer.owner];
+                });
+                res.json(producers);
+            });
         });
-        res.json(producers)
     });
 
     app.get('/explorer/vote', (req, res) => {
-        const producer = req.query.producer
-        const total_vote = memory.hget('total_vote', producer)
-        res.json(total_vote)
+        if (req.query.producer) {
+            memory.hget("total_vote", req.query.producer, function (err, obj) {
+                if (err || obj == null) {
+                    res.json();
+                } else {
+                    res.json(1 * obj);
+                }
+            });
+        } else {
+            res.json();
+        }
     });
 
     app.get('/explorer/proxies', (req, res) => {
-
-        const proxied_votes = memory.get("proxied_vote")
-        if (!proxied_votes) {
-            res.json();
-        } else {
+        memory.hgetall("proxied_vote", function (err, objs) {
+            if (err || objs == null) {
+                res.json();
+            }
             let proxies = []
-            for (let i in proxied_votes) {
+            for (let i in objs) {
                 proxies.push({
                     proxy: i,
-                    proxied_vote: Number(proxied_votes[i])
+                    proxied_vote: Number(objs[i])
                 })
             }
             res.json(proxies);
-        }
+        });
     });
 
     app.get('/explorer/proxy', (req, res) => {
@@ -58,20 +80,18 @@ module.exports = (app, memory, db) => {
 
         if (req.query.proxy) {
             let proxy_arr = [];
-            const obj = memory.hget("proxy", req.query.proxy)
-
-            if (!obj) {
-                res.json();
-            }
-
-            proxy_arr = obj.proxied;
-            if (proxy_arr) {
-                let result = proxy_arr.slice(start, start + size);
-                res.json(result);
-            } else {
-                return res.json();
-            }
-
+            memory.hget("proxy", req.query.proxy, function (err, obj) {
+                if (err || obj == null) {
+                    res.json();
+                }
+                proxy_arr = JSON.parse(obj).proxied;
+                if (proxy_arr) {
+                    let result = proxy_arr.slice(start, start + size);
+                    res.json(result);
+                } else {
+                    return res.json();
+                }
+            });
         } else {
             res.json();
         }
@@ -86,13 +106,19 @@ module.exports = (app, memory, db) => {
         }
 
         if (req.query.producer) {
-            const voters = memory.hget("voters", req.query.producer)
-            if (!voters) {
-                res.json();
-            } else {
-                let result = voters.slice(start, start + size);
-                res.json(result);
-            }
+            let voter_arr = [];
+            memory.hget("voters", req.query.producer, function (err, obj) {
+                if (err || obj == null) {
+                    res.json();
+                }
+                voter_arr = JSON.parse(obj);
+                if (voter_arr) {
+                    let result = voter_arr.slice(start, start + size);
+                    res.json(result);
+                } else {
+                    return res.json();
+                }
+            });
         } else {
             res.json();
         }
@@ -103,19 +129,21 @@ module.exports = (app, memory, db) => {
      * get contracts info
      */
     app.get('/explorer/contracts', (req, res) => {
-        const objs = memory.hgetall("contracts")
-        if (!objs) {
-            res.json();
-        }
-        let arr = [];
-        for (let obj in objs) {
-            let newObj = objs[obj];
-            arr.push(newObj);
-        }
-        arr.sort((a, b) => {
-            return b.count - a.count;
+        memory.hgetall("contracts", function (err, objs) {
+            if (err || objs == null) {
+                res.json();
+            }
+            let arr = [];
+            for (let obj in objs) {
+                let newObj = JSON.parse(objs[obj]);
+                newObj.abi = null;
+                arr.push(newObj);
+            }
+            arr.sort((a, b) => {
+                return b.count - a.count;
+            });
+            res.json(arr);
         });
-        res.json(arr);
     });
 
     /**
@@ -125,11 +153,12 @@ module.exports = (app, memory, db) => {
         if (!req.params.account) {
             res.status(400).json({ error: 'contract name is null' })
         }
-        const obj = memory.hget("contracts", req.params.account)
-        if (!obj) {
-            res.status(400).json({ error: 'contract name not found' })
-        }
-        res.json(obj);
+        memory.hget("contracts", req.params.account, function (err, obj) {
+            if (err || obj == null) {
+                res.status(400).json({ error: 'contract name not found' })
+            }
+            res.json(JSON.parse(obj));
+        });
 
     });
 
@@ -140,12 +169,13 @@ module.exports = (app, memory, db) => {
         if (!req.params.contract) {
             res.status(400).json({ error: 'contract name is null' })
         }
-        const obj = redis.hget("contracts", req.params.contract)
-        if (!obj) {
-            res.json();
-        }
-        let actions = obj.actions;
-        res.json(actions);
+        memory.hget("contracts", req.params.contract, function (err, obj) {
+            if (err || obj == null) {
+                res.json();
+            }
+            let actions = JSON.parse(obj).actions;
+            res.json(actions);
+        });
     });
 
     app.get('/explorer/contractTraces', (req, res) => {

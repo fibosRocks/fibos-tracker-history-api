@@ -45,8 +45,8 @@ module.exports = (memory, db) => {
                         return Number(b.staked) - Number(a.staked);
                     });
                     // 代理人信息写入redis
-                    memory.hset("proxy", i, proxy[i]);
-                    memory.hset("proxied_vote", i, staked);
+                    memory.hset("proxy", i, JSON.stringify(proxy[i]));
+                    memory.hset("proxied_vote", i, JSON.stringify(staked));
                 }
                 // 代理写入节点得票
                 proxy[i].producers.forEach(producer => {
@@ -69,12 +69,12 @@ module.exports = (memory, db) => {
                 bpcs[i].sort(function (a, b) {
                     return b.staked - a.staked;
                 });
-                memory.hset("voters", i, bpcs[i]);
+                memory.hset("voters", i, JSON.stringify(bpcs[i]));
                 let total_vote = 0;
                 bpcs[i].forEach(voter => {
                     total_vote += 1 * voter.staked;
                 });
-                memory.hset("total_vote", i, total_vote);
+                memory.hset("total_vote", i, JSON.stringify(total_vote));
             }
             voters = [];
             bpcs = {};
@@ -203,7 +203,7 @@ module.exports = (memory, db) => {
             producers.sort((a, b) => {
                 return 1 * b.total_votes - 1 * a.total_votes;
             });
-            memory.set("producers", producers);
+            memory.set("producers", JSON.stringify(producers));
         })
 
     }

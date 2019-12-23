@@ -2,7 +2,14 @@
     "apps": [
         {
             "name": "fibos-tracker-api",
-            "script": "api.js"
+            "script": "api.js",
+            "exec_mode": "cluster",
+            "instances": 4
+        },
+        {
+            "name": "fibos-tracker-loader",
+            "script": "./explorer",
+            "exec_mode": "fork"
         }
     ]
 }

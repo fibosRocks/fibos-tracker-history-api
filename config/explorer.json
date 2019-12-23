@@ -1,5 +1,9 @@
 {
     "httpEndPoints": [
         "http://api.fibos.rocks"
-    ]
+    ],
+    "redis": {
+        "host": "127.0.0.1",
+        "port": "6379"
+    }
 }

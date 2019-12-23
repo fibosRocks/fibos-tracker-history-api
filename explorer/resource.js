@@ -41,7 +41,7 @@ module.exports = (memory, db) => {
                 "fo_usdt_price": fo_usdt_price
             }
             console.log("resource:", resource);
-            memory.set("resource", resource);
+            memory.set("resource", JSON.stringify(resource));
         }).catch(async err => {
             console.error(err);
             await delay(2000);

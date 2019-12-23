@@ -81,7 +81,7 @@ module.exports = (memory, db) => {
                 dashboard.blocks = blocks;
                 dashboard.transactions = transactions;
                 // console.log({ dashboard })
-                memory.set("dashboard", dashboard);
+                memory.set("dashboard", JSON.stringify(dashboard));
             })
     }
 
