@@ -47,7 +47,7 @@ fibos.load("ethash");
 //     if (fs.exists(config.tracker.sqlitePath + k)) fs.unlink(config.tracker.sqlitePath + k);
 // });
 
-const Tracker = require("fibos-tracker");
+const Tracker = require("fibos-explorer-tracker");
 Tracker.Config.replay = config.tracker.replay;
 Tracker.Config.replayStatrBn = config.tracker.replayStatrBn;
 if (config.tracker.sqlitePath) {
@@ -55,7 +55,7 @@ if (config.tracker.sqlitePath) {
 }
 
 const tracker = new Tracker();
-tracker.use(require("fibos-accounts"));
+tracker.use(require("fibos-explorer-accounts"));
 tracker.use(require("./addons/explorer"));
 tracker.emitter();
 
