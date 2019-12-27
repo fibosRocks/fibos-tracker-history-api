@@ -44,8 +44,8 @@ sqlite.open(dbPath).then(db => {
     // history
     require('./api/v2.history.js')(app, db);
     // explorer
-    // const memory = require('./explorer/memory')
-    // require('./api/explorer.js')(app, memory, db);
+    const memory = require('./explorer/memory')
+    require('./api/explorer.js')(app, memory, db);
 })
 
 process.on('uncaughtException', (err) => {
