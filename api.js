@@ -18,9 +18,8 @@ const swaggerSpec = swaggerJSDoc({
 
 const express = require('express');
 const app = express();
-app.use(bodyparser.json({
-    strict: false,
-}));
+app.use(bodyparser.json())
+app.use(bodyparser.json({ type: 'text/plain' }))
 app.use('/', express.static(__dirname + '/html'));
 
 app.all('*', function (req, res, next) {
@@ -45,8 +44,8 @@ sqlite.open(dbPath).then(db => {
     // history
     require('./api/v2.history.js')(app, db);
     // explorer
-    const memory = require('./explorer/memory')
-    require('./api/explorer.js')(app, memory, db);
+    // const memory = require('./explorer/memory')
+    // require('./api/explorer.js')(app, memory, db);
 })
 
 process.on('uncaughtException', (err) => {
