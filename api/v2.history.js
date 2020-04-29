@@ -178,7 +178,7 @@ module.exports = (app, db) => {
 
             if (sort == -1) {	//like history format
                 formatActions.sort((a, b) => {
-                    return a.account_action_seq - b.account_action_seq;
+                    return a.global_action_seq - b.global_action_seq;
                 })
             }
 
