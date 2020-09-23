@@ -5,99 +5,99 @@ const fibos_graphql = require('../lib/fibos_graphql')
 
 module.exports = (app, db) => {
 
-	/**
-	 * @swagger
-	 *
-	 * /v1/history/get_actions:
-	 *   post:
-	 *     description: get_actions
-	 *     requestBody:
- 	 *       content:
- 	 *         application/json:
- 	 *           schema:
- 	 *             type: object
- 	 *             properties:
- 	 *               pos:
- 	 *                 type: number
- 	 *                 default: -1
- 	 *               offset:
- 	 *                 type: number
- 	 *                 default: 10
- 	 *               account_name:
- 	 *                 type: string
- 	 *                 default: cryptolions1
- 	 *               action_name:
- 	 *                 type: string
- 	 *                 default: all
-	 */
+    /**
+     * @swagger
+     *
+     * /v1/history/get_actions:
+     *   post:
+     *     description: get_actions
+     *     requestBody:
+       *       content:
+       *         application/json:
+       *           schema:
+       *             type: object
+       *             properties:
+       *               pos:
+       *                 type: number
+       *                 default: -1
+       *               offset:
+       *                 type: number
+       *                 default: 10
+       *               account_name:
+       *                 type: string
+       *                 default: cryptolions1
+       *               action_name:
+       *                 type: string
+       *                 default: all
+     */
     app.post('/v1/history/get_actions', getActionsPOST);
 
     /**
-	 * @swagger
-	 *
-	 * /v1/history/get_symbol_actions:
-	 *   post:
-	 *     description: get_symbol_actions
-	 *     requestBody:
- 	 *       content:
- 	 *         application/json:
- 	 *           schema:
- 	 *             type: object
- 	 *             properties:
- 	 *               limit:
- 	 *                 type: number
- 	 *                 default: 50
- 	 *               skip:
- 	 *                 type: number
- 	 *                 default: 0
- 	 *               account:
- 	 *                 type: string
-	 */
+     * @swagger
+     *
+     * /v1/history/get_symbol_actions:
+     *   post:
+     *     description: get_symbol_actions
+     *     requestBody:
+       *       content:
+       *         application/json:
+       *           schema:
+       *             type: object
+       *             properties:
+       *               limit:
+       *                 type: number
+       *                 default: 50
+       *               skip:
+       *                 type: number
+       *                 default: 0
+       *               account:
+       *                 type: string
+     */
     app.post('/v1/history/get_symbol_actions', getSymbolActionsPOST);
 
-	/**
-	 * @swagger
-	 *
-	 * /v1/history/get_transaction:
-	 *   post:
-	 *     description: get_transaction
-	 *     requestBody:
- 	 *       content:
- 	 *         application/json:
- 	 *           schema:
- 	 *             type: object
- 	 *             properties:
- 	 *               id:
- 	 *                 type: string
-	 */
+    /**
+     * @swagger
+     *
+     * /v1/history/get_transaction:
+     *   post:
+     *     description: get_transaction
+     *     requestBody:
+       *       content:
+       *         application/json:
+       *           schema:
+       *             type: object
+       *             properties:
+       *               id:
+       *                 type: string
+     */
     app.post('/v1/history/get_transaction', getTransactionPOST);
 
-	/**
-	 * @swagger
-	 *
-	 * /v1/history/get_transaction/${id}:
-	 *   get:
-	 *     description: Get Transaction by id
-	 *     produces:
-	 *       - application/json
-	 */
+    /**
+     * @swagger
+     *
+     * /v1/history/get_transaction/${id}:
+     *   get:
+     *     description: Get Transaction by id
+     *     produces:
+     *       - application/json
+     */
     app.get('/v1/history/get_transaction/:id', getTransactionGET);
 
-	/**
-	 * @swagger
-	 *
-	 * /v1/history/get_key_accounts:
-	 *   post:
-	 *     description: get_key_accounts
-	 *     requestBody:
- 	 *       content:
- 	 *         application/json:
- 	 *           schema:
- 	 *             type: object
- 	 *             properties:
- 	 *               public_key:
- 	 *                 type: string
-	 */
+    /**
+     * @swagger
+     *
+     * /v1/history/get_key_accounts:
+     *   post:
+     *     description: get_key_accounts
+     *     requestBody:
+       *       content:
+       *         application/json:
+       *           schema:
+       *             type: object
+       *             properties:
+       *               public_key:
+       *                 type: string
+     */
     app.post('/v1/history/get_key_accounts', getKeyAccountsPOST);
 
     function getSymbolActionsPOST(req, res) {
@@ -154,7 +154,15 @@ module.exports = (app, db) => {
             limit = 200
         }
 
-        const actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY a.id ${orderBy} LIMIT ${limit} OFFSET ${skip};`
+        let actionSql
+        if (pos < 0) {
+            actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY a.id DESC LIMIT ${limit};`
+        } else {
+            actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  AND a.global_sequence <= ${pos} ORDER BY a.id DESC LIMIT ${limit};`
+        }
+
+        // const actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY a.id ${orderBy} LIMIT ${limit} OFFSET ${skip};`
+        // fix bug change pos to global_sequence
         const actionsPromise = db.all(actionSql);
 
         const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
@@ -176,11 +184,15 @@ module.exports = (app, db) => {
                 })
             });
 
-            if (sort == -1) {	//like history format
-                formatActions.sort((a, b) => {
-                    return a.global_action_seq - b.global_action_seq;
-                })
-            }
+            // if (sort == -1) {	//like history format
+            //     formatActions.sort((a, b) => {
+            //         return a.global_action_seq - b.global_action_seq;
+            //     })
+            // }
+
+            formatActions.sort((a, b) => {
+                return a.global_action_seq - b.global_action_seq;
+            })
 
             const result = {}
             result.actions = formatActions;
