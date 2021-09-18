@@ -46,7 +46,7 @@ module.exports = (memory, db) => {
         });
         //get 20 trasactions
         let transactionsPromise = new Promise((resolve, reject) => {
-            db.all(SQL`SELECT * FROM fibos_transactions order by id desc limit 20`).then(transactions => {
+            db.all(SQL`SELECT * FROM fibos_transactions where contract_action != "eosio.cross/pushblk" order by id desc limit 20`).then(transactions => {
                 let liteTrxs = [];
                 transactions.forEach(transaction => {
                     const trx = {};
