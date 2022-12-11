@@ -6,7 +6,7 @@
         "big-integer": "^1.6.48",
         "body-parser": "^1.19.0",
         "delay": "^4.3.0",
-        "express": "^4.17.1",
+        "express": "^4.17.3",
         "fibos-explorer-accounts": "git+https://github.com/fibosRocks/fibos-explorer-accounts.git",
         "fibos-explorer-tracker": "git+https://github.com/fibosRocks/fibos-explorer-tracker.git",
         "redis": "^2.8.0",
