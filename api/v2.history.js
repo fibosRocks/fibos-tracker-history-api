@@ -2,6 +2,8 @@
 
 const SQL = require('sql-template-strings');
 const fibos_graphql = require('../lib/fibos_graphql')
+const axios = require('axios')
+const httpEndPoint = require('../config/explorer.json').httpEndPoints[0];
 
 module.exports = (app, db) => {
 
@@ -165,8 +167,8 @@ module.exports = (app, db) => {
         // fix bug change pos to global_sequence
         const actionsPromise = db.all(actionSql);
 
-        const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
-        return Promise.all([libPromise, actionsPromise]).then(([lib, actions]) => {
+        // const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
+        return Promise.all([getLib, actionsPromise]).then(([lib, actions]) => {
             if (!actions) {
                 actions = []
             }
@@ -196,7 +198,7 @@ module.exports = (app, db) => {
 
             const result = {}
             result.actions = formatActions;
-            result.last_irreversible_block = lib.block_num;
+            result.last_irreversible_block = lib;
             res.json(result)
         })
     }
@@ -229,13 +231,13 @@ module.exports = (app, db) => {
 
     function getTransaction(id) {
         const txPromise = db.get(SQL`SELECT rawData FROM fibos_transactions WHERE trx_id = ${id}`);
-        const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
-        return Promise.all([libPromise, txPromise]).then(([lib, tx]) => {
+        // const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
+        return Promise.all([getLib, txPromise]).then(([lib, tx]) => {
             if (!tx) {
                 throw new Error('transaction not found!')
             }
             const transaction = JSON.parse(tx.rawData)
-            transaction.last_irreversible_block = lib.block_num
+            transaction.last_irreversible_block = lib
             return transaction
         })
     }
@@ -261,6 +263,15 @@ module.exports = (app, db) => {
                 account_names.push(account.account_id)
             }
             return { account_names }
+        })
+    }
+
+    function getLib() {
+        return axios.get(`${httpEndPoint}/v1/chain/get_info`).then(res => {
+            const { data } = res;
+            return data.last_irreversible_block_num;
+        }).catch(err => {
+            console.error(err)
         })
     }
 
