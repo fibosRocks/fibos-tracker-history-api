@@ -1,5 +1,7 @@
 'use strict';
 
+const SQL = require('sql-template-strings');
+
 module.exports = (app, memory, db) => {
 
     app.get('/explorer/stats', (req, res) => {
@@ -35,6 +37,68 @@ module.exports = (app, memory, db) => {
                     producer.eos_votes = 1 * objs[producer.owner];
                 });
                 res.json(producers);
+            });
+        });
+    });
+
+    /**
+     * @swagger
+     *
+     * /explorer/producerHealth:
+     *   get:
+     *     description: 最近出过块的节点及其最后出块时间,用于节点健康监控。结果按 last_block_num 倒序;缺席节点不出现在列表里(由消费方对比 21 BP 调度表识别"应出未出")。响应在 redis 缓存 3 秒。
+     *     responses:
+     *       200:
+     *         description: producer health array
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   producer:
+     *                     type: string
+     *                   last_block_num:
+     *                     type: number
+     *                   last_block_time:
+     *                     type: string
+     *                   seconds_since_last_block:
+     *                     type: number
+     */
+    app.get('/explorer/producerHealth', (req, res) => {
+        const CACHE_KEY = 'producerHealth';
+        const CACHE_TTL = 3;
+        const WINDOW = 1000;
+
+        const respond = (rows) => {
+            const now = Date.now();
+            res.json(rows.map(r => {
+                const iso = r.last_block_time.replace(' ', 'T');
+                return {
+                    producer: r.producer,
+                    last_block_num: r.last_block_num,
+                    last_block_time: iso,
+                    seconds_since_last_block: (now - new Date(iso + 'Z').getTime()) / 1000
+                };
+            }));
+        };
+
+        memory.get(CACHE_KEY, (err, cached) => {
+            if (!err && cached) {
+                return respond(JSON.parse(cached));
+            }
+            const sql = SQL`
+                SELECT producer, MAX(block_num) AS last_block_num, MAX(block_time) AS last_block_time
+                FROM (SELECT producer, block_num, block_time FROM fibos_blocks ORDER BY id DESC LIMIT ${WINDOW})
+                GROUP BY producer
+                ORDER BY last_block_num DESC
+            `;
+            db.all(sql).then(rows => {
+                memory.set(CACHE_KEY, JSON.stringify(rows), 'EX', CACHE_TTL);
+                respond(rows);
+            }).catch(e => {
+                res.status(500).json({ error: e.message });
             });
         });
     });
