@@ -6,5 +6,5 @@
         "host": "127.0.0.1",
         "port": "6379"
     },
-    "dbPath": "/root/.fibos/tracker/db/tracker.db"
+    "dbPath": "/root/tracker/db/tracker.db"
 }
