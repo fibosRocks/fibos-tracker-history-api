@@ -1,6 +1,0 @@
-{
-    "http_port": 18888,
-    "p2p_port": 19876,
-    "config_dir": "./config",
-    "data_dir": "./data"
-}

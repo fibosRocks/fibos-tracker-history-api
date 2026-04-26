@@ -1,9 +1,12 @@
-const path = require('path')
 const sqlite = require('sqlite');
-const dbPath = path.resolve('db/tracker.db')
+const sqlite3 = require('sqlite3')
+const config = require('../config/explorer.json')
 const memory = require('./memory')
 
-sqlite.open(dbPath).then(async db => {
+sqlite.open({
+    filename: config.dbPath,
+    driver: sqlite3.Database
+}).then(async db => {
     require('./voters')(memory, db)
     require('./resource')(memory, db)
     require('./cache')(memory, db)

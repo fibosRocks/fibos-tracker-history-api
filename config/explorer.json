@@ -1,9 +1,10 @@
 {
     "httpEndPoints": [
-        "http://api.fibos.rocks"
+        "http://127.0.0.1:8888"
     ],
     "redis": {
         "host": "127.0.0.1",
         "port": "6379"
-    }
+    },
+    "dbPath": "./db/tracker.db"
 }

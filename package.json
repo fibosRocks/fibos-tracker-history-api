@@ -7,11 +7,10 @@
         "body-parser": "^1.19.0",
         "delay": "^4.3.0",
         "express": "^4.17.1",
-        "fibos-explorer-accounts": "git+https://github.com/fibosRocks/fibos-explorer-accounts.git",
-        "fibos-explorer-tracker": "git+https://github.com/fibosRocks/fibos-explorer-tracker.git",
         "redis": "^2.8.0",
         "sql-template-strings": "^2.2.2",
-        "sqlite": "^3.0.3",
+        "sqlite": "^5.0.1",
+        "sqlite3": "^5.1.6",
         "swagger-jsdoc": "^3.5.0"
     }
 }

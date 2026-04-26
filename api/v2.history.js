@@ -158,9 +158,9 @@ module.exports = (app, db) => {
 
         let actionSql
         if (pos < 0) {
-            actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY a.id DESC LIMIT ${limit};`
+            actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY aa.action_id DESC LIMIT ${limit};`
         } else {
-            actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  AND a.global_sequence <= ${pos} ORDER BY a.id DESC LIMIT ${limit};`
+            actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  AND a.global_sequence <= ${pos} ORDER BY aa.action_id DESC LIMIT ${limit};`
         }
 
         // const actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY a.id ${orderBy} LIMIT ${limit} OFFSET ${skip};`
@@ -177,13 +177,15 @@ module.exports = (app, db) => {
                 const receipt = JSON.parse(element.receipt)
                 const action = JSON.parse(element.rawData)
                 action.receipt = receipt
-                formatActions.push({
-                    "global_action_seq": Number(action.receipt.global_sequence),
-                    "account_action_seq": Number(action.receipt.recv_sequence) - 1,
-                    "block_num": Number(action.block_num),
-                    "block_time": action.block_time,
-                    "action_trace": action
-                })
+                if (pos < 0 || Number(action.receipt.global_sequence) <= pos) {
+                    formatActions.push({
+                        "global_action_seq": Number(action.receipt.global_sequence),
+                        "account_action_seq": Number(action.receipt.recv_sequence) - 1,
+                        "block_num": Number(action.block_num),
+                        "block_time": action.block_time,
+                        "action_trace": action
+                    })
+                }
             });
 
             // if (sort == -1) {	//like history format

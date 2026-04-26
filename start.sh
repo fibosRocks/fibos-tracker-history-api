@@ -1,1 +1,0 @@
-nohup fibos tracker.js  >> log/tracker.log 2>&1 &

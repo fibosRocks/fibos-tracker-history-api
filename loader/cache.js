@@ -1,6 +1,6 @@
 const SQL = require('sql-template-strings');
 const axios = require('axios');
-const trackerHttpPort = require('../config/tracker.json').http_port;
+const { httpEndPoints } = require('../config/explorer.json')
 
 module.exports = (memory, db) => {
 
@@ -9,7 +9,7 @@ module.exports = (memory, db) => {
 
         //get summaries
         let promises = [
-            axios.get(`http://127.0.0.1:${trackerHttpPort}/v1/chain/get_info`).then(res => {
+            axios.get(`${httpEndPoints[0]}/v1/chain/get_info`).then(res => {
                 const { data } = res;
                 return data.head_block_num;
             }).catch(err => {

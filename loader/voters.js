@@ -64,10 +64,10 @@ module.exports = (memory, db) => {
                     }
                 })
             }
-            //sort by staked
+            //sort by last_vote_weight
             for (let i in bpcs) {
                 bpcs[i].sort(function (a, b) {
-                    return b.staked - a.staked;
+                    return b.last_vote_weight - a.last_vote_weight;
                 });
                 memory.hset("voters", i, JSON.stringify(bpcs[i]));
                 let total_vote = 0;
