@@ -20,7 +20,6 @@ const express = require('express');
 const app = express();
 app.use(bodyparser.json())
 app.use(bodyparser.json({ type: 'text/plain' }))
-app.use('/', express.static(__dirname + '/html'));
 
 app.all('*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
