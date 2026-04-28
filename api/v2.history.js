@@ -156,12 +156,9 @@ module.exports = (app, db) => {
             limit = 200
         }
 
-        let actionSql
-        if (pos < 0) {
-            actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY aa.action_id DESC LIMIT ${limit};`
-        } else {
-            actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  AND a.global_sequence <= ${pos} ORDER BY aa.action_id DESC LIMIT ${limit};`
-        }
+        const actionSql = SQL`SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account=${account_name} AND aa.action_id = a.id`
+        if (pos >= 0) actionSql.append(SQL` AND a.global_sequence <= ${pos}`)
+        actionSql.append(SQL` ORDER BY aa.action_id DESC LIMIT ${limit}`)
 
         // const actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY a.id ${orderBy} LIMIT ${limit} OFFSET ${skip};`
         // fix bug change pos to global_sequence
@@ -231,6 +228,13 @@ module.exports = (app, db) => {
         })
     }
 
+    function pruneNotifications(traces) {
+        if (!Array.isArray(traces)) return traces;
+        return traces
+            .filter(t => t && t.receipt && t.act && t.receipt.receiver === t.act.account)
+            .map(t => Object.assign({}, t, { inline_traces: pruneNotifications(t.inline_traces) }));
+    }
+
     function getTransaction(id) {
         const txPromise = db.get(SQL`SELECT rawData FROM fibos_transactions WHERE trx_id = ${id}`);
         // const libPromise = db.get(SQL`SELECT block_num FROM fibos_blocks WHERE status = 'noreversible' ORDER BY block_num desc LIMIT 1`);
@@ -239,6 +243,7 @@ module.exports = (app, db) => {
                 throw new Error('transaction not found!')
             }
             const transaction = JSON.parse(tx.rawData)
+            transaction.action_traces = pruneNotifications(transaction.action_traces)
             transaction.last_irreversible_block = lib
             return transaction
         })
