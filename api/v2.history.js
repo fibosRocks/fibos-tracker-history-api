@@ -156,9 +156,12 @@ module.exports = (app, db) => {
             limit = 200
         }
 
-        const actionSql = SQL`SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account=${account_name} AND aa.action_id = a.id`
-        if (pos >= 0) actionSql.append(SQL` AND a.global_sequence <= ${pos}`)
-        actionSql.append(SQL` ORDER BY aa.action_id DESC LIMIT ${limit}`)
+        let actionSql
+        if (pos < 0) {
+            actionSql = SQL`SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account=${account_name} AND aa.action_id = a.id  ORDER BY aa.action_id DESC LIMIT ${limit};`
+        } else {
+            actionSql = SQL`SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account=${account_name} AND aa.action_id = a.id  AND a.global_sequence <= ${pos} ORDER BY aa.action_id DESC LIMIT ${limit};`
+        }
 
         // const actionSql = `SELECT aa.receipt,a.* FROM fibos_account_actions AS aa,fibos_actions AS a WHERE aa.account='${account_name}' AND aa.action_id = a.id  ORDER BY a.id ${orderBy} LIMIT ${limit} OFFSET ${skip};`
         // fix bug change pos to global_sequence
