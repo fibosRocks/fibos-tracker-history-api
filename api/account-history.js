@@ -6,7 +6,54 @@ const httpEndPoint = require('../config/explorer.json').httpEndPoints[0];
 
 const ACCOUNT_RE = /^[a-z1-5.]{1,12}$/;
 
+// 30s TTL cache for COUNT(*) — avoids repeated full-index scans on large accounts
+const TOTAL_TTL_MS = 30 * 1000;
+const TOTAL_CACHE_MAX = 1000;
+const totalCache = new Map();
+
+function getCachedTotal(account) {
+    const e = totalCache.get(account);
+    if (e && Date.now() - e.ts < TOTAL_TTL_MS) return e.total;
+    return null;
+}
+
+function setCachedTotal(account, total) {
+    if (totalCache.size >= TOTAL_CACHE_MAX) {
+        const firstKey = totalCache.keys().next().value;
+        totalCache.delete(firstKey);
+    }
+    totalCache.set(account, { total, ts: Date.now() });
+}
+
 module.exports = (app, db) => {
+
+    /**
+     * @swagger
+     *
+     * /explorer/history/{account}/paged:
+     *   get:
+     *     description: 获取账户交易历史（page 分页，返回总数）
+     *     parameters:
+     *       - in: path
+     *         name: account
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: 账户名
+     *       - in: query
+     *         name: page
+     *         schema:
+     *           type: integer
+     *           default: 1
+     *         description: 页码，1-indexed
+     *       - in: query
+     *         name: size
+     *         schema:
+     *           type: integer
+     *           default: 50
+     *         description: 每页条数，1-100
+     */
+    app.get('/explorer/history/:account/paged', getAccountHistoryPaged);
 
     /**
      * @swagger
@@ -34,6 +81,68 @@ module.exports = (app, db) => {
      *         description: 每页条数，1-100
      */
     app.get('/explorer/history/:account', getAccountHistoryGET);
+
+    function getAccountHistoryPaged(req, res) {
+        const account = req.params.account;
+
+        if (!account || !ACCOUNT_RE.test(account)) {
+            return res.status(400).json({ error: 'Invalid account name' });
+        }
+
+        let page = parseInt(req.query.page, 10);
+        if (isNaN(page) || page < 1) page = 1;
+
+        let size = parseInt(req.query.size, 10);
+        if (isNaN(size) || size < 1) size = 50;
+        if (size > 100) size = 100;
+
+        const offset = (page - 1) * size;
+
+        const itemsQuery = db.all(SQL`
+            SELECT aa.action_id, aa.receipt, a.global_sequence, a.trx_id, a.rawData
+            FROM fibos_account_actions aa, fibos_actions a
+            WHERE aa.account = ${account} AND aa.action_id = a.id
+            ORDER BY aa.action_id DESC
+            LIMIT ${size} OFFSET ${offset}
+        `);
+
+        const cachedTotal = getCachedTotal(account);
+        const totalQuery = cachedTotal != null
+            ? Promise.resolve(cachedTotal)
+            : db.get(SQL`SELECT COUNT(*) AS c FROM fibos_account_actions WHERE account = ${account}`)
+                .then(row => {
+                    const total = row.c;
+                    setCachedTotal(account, total);
+                    return total;
+                });
+
+        Promise.all([getLib(), itemsQuery, totalQuery]).then(([lib, rows, total]) => {
+            const items = rows.map(row => {
+                const receipt = JSON.parse(row.receipt);
+                const rawData = JSON.parse(row.rawData);
+                return {
+                    action_id: row.action_id,
+                    global_sequence: receipt.global_sequence,
+                    trx_id: row.trx_id,
+                    block_num: rawData.block_num,
+                    block_time: rawData.block_time,
+                    act: rawData.act,
+                };
+            });
+
+            res.json({
+                items,
+                total,
+                page,
+                size,
+                has_more: (page * size) < total,
+                last_irreversible_block: lib || 0,
+            });
+        }).catch(err => {
+            console.error('account-history paged error:', err);
+            res.status(500).json({ error: err.message });
+        });
+    }
 
     function getAccountHistoryGET(req, res) {
         const account = req.params.account;
