@@ -267,12 +267,30 @@ module.exports = (app, db) => {
     }
 
     function getKeyAccounts(public_key) {
-        return db.all(SQL`SELECT DISTINCT account_id FROM fibos_permissions WHERE pub_key = ${public_key}`).then(accounts => {
-            const account_names = []
-            for (const account of accounts) {
-                account_names.push(account.account_id)
-            }
-            return { account_names }
+        // public_key formats: FO{body} | PUB{body} | PUB_K1_{body} | PUB_R1_{body}
+        // input may be any of these; db may store a different prefix for the same key body
+        let body;
+        if (public_key.startsWith('PUB_K1_') || public_key.startsWith('PUB_R1_')) {
+            body = public_key.substring(7);
+        } else if (public_key.startsWith('FO')) {
+            body = public_key.substring(2);
+        } else if (public_key.startsWith('PUB')) {
+            body = public_key.substring(3);
+        } else {
+            body = public_key;
+        }
+
+        const variants = [
+            `FO${body}`,
+            `PUB${body}`,
+            `PUB_K1_${body}`,
+            `PUB_R1_${body}`
+        ];
+
+        const placeholders = variants.map(() => '?').join(',');
+        return db.all(`SELECT DISTINCT account_id FROM fibos_permissions WHERE pub_key IN (${placeholders})`, ...variants).then(accounts => {
+            const account_names = accounts.map(a => a.account_id);
+            return { account_names };
         })
     }
 
