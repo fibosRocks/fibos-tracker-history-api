@@ -43,7 +43,7 @@ module.exports = (app, db) => {
         }
 
         let limit = parseInt(req.query.limit, 10);
-        if (isNaN(limit) || limit < 1) limit = 20;
+        if (isNaN(limit) || limit < 1) limit = 50;
         if (limit > 100) limit = 100;
 
         const cursorRaw = parseInt(req.query.cursor, 10);
