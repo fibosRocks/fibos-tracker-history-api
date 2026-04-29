@@ -44,6 +44,7 @@ sqlite.open({
     driver: sqlite3.Database
 }).then(db => {    // history
     require('./api/v2.history.js')(app, db);
+    require('./api/account-history.js')(app, db);
     // explorer
     const memory = require('./loader/memory.js')
     require('./api/explorer.js')(app, memory, db);
